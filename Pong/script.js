@@ -2,6 +2,8 @@ const canvas = document.getElementById('pong');
 const ctx = canvas.getContext('2d');
 
 // Variáveis do jogo
+let statusGame = 'menu';
+
 let ballX = canvas.width / 2;
 let ballY = canvas.height / 2;
 let ballRadius = 10;
@@ -21,38 +23,88 @@ let player2Score = 0;
 window.onload = gameLoop;
 
 function gameLoop() {
-    // Limpar a tela antes de desenhar
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Atualizar a posição da bola
-    updateBall();
+    
+    tick();
+    render();
 
-    // Desenhar a bola
-    drawBall();
-
-    // Mover as raquetes
-    player1Y += player1Speed;
-    player2Y += player2Speed;
-
-    // Limitar as raquetes às bordas da tela
-    player1Y = Math.max(player1Y, 0); // Limite superior
-    player1Y = Math.min(player1Y, canvas.height - playerHeight); // Limite inferior
-    player2Y = Math.max(player2Y, 0); // Limite superior
-    player2Y = Math.min(player2Y, canvas.height - playerHeight); // Limite inferior
-
-    // Desenhar os raquetes
-    drawPlayer1();
-    movePlayer1();
-    drawPlayer2();
-    movePlayer2();
-
-    // Desenhar o placar
-    drawScore();
-
-    // Solicitar a próxima iteração do game loop
     requestAnimationFrame(gameLoop);
-    console.log("1:",player1Speed);
-    console.log("2",player2Speed);
+}
+
+function tick(){
+
+    if(statusGame == 'menu'){
+        document.addEventListener('keydown', function(event){
+            if(event.key === 'Enter'){
+                statusGame = 'game';
+            }
+        });
+    }else if(statusGame == 'game'){
+        
+        // Atualizar a posição da bola
+        updateBall();
+
+        //players
+        movePlayer1();
+        movePlayer2();
+        pause();
+    }else if(statusGame == 'pause'){
+        pause();
+    }
+    
+}
+
+function render(){
+
+    if(statusGame == 'menu'){
+        ctx.beginPath();
+        ctx.font = '50px Arial';
+        ctx.fillStyle = 'white';
+
+        ctx.fillText('- Aperte ENTER para iniciar -', canvas.width/2 - 320, canvas.height/2);
+    }else if(statusGame == 'game'){
+        // Limpar a tela antes de desenhar
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+        // Desenhar a bola
+        drawBall();
+
+        //players
+        drawPlayer1();
+        drawPlayer2();
+
+        // Desenhar o placar
+        drawArena();
+    }else if(statusGame == 'pause'){
+        // Limpar a tela antes de desenhar
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+        // Desenhar a bola
+        drawBall();
+
+        //players
+        drawPlayer1();
+        drawPlayer2();
+
+        // Desenhar o placar
+        drawArena();
+    }
+
+    
+}
+
+function pause(){
+    document.addEventListener('keydown', function(event){
+        if(event.key === ' '){
+            statusGame = 'pause';
+        }
+    });
+
+    document.addEventListener('keydown', function(event){
+        if(event.key === 'Enter'){
+            statusGame = 'game';
+        }
+    });
 }
 
 // Função para desenhar a bola
@@ -63,9 +115,12 @@ function drawBall() {
     ctx.fill();
 }
 
-// Players ----------------------------------------------------------------------------------------------
 function movePlayer1(){
-    // Evento de teclado para a raquete do Jogador 1:
+    player1Y += player1Speed;
+
+    player1Y = Math.max(player1Y, 0);
+    player1Y = Math.min(player1Y, canvas.height - playerHeight);
+
     document.addEventListener('keydown', function(event) {
         if (event.key === 'w') {
             player1Speed = -10; // Inverte a velocidade para cima
@@ -88,7 +143,11 @@ function drawPlayer1(){
 }
 
 function movePlayer2(){
-// Evento de teclado para a raquete do Jogador 2:
+    player2Y += player2Speed;
+
+    player2Y = Math.max(player2Y, 0);
+    player2Y = Math.min(player2Y, canvas.height - playerHeight);
+
     document.addEventListener('keydown', function(event) {
     if (event.key === 'ArrowUp') {
         player2Speed = -10; // Inverte a velocidade para cima
@@ -99,7 +158,7 @@ function movePlayer2(){
 
     document.addEventListener('keyup', function(event) {
         if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
-            player2Speed = 0; // Para a raquete quando a tecla for solta
+            player2Speed = 0; 
         }
     });
 }
@@ -109,15 +168,19 @@ function drawPlayer2(){
     
     ctx.fillRect(canvas.width - 10 - playerWidth, player2Y, playerWidth, playerHeight);
 }
-// Players ----------------------------------------------------------------------------------------------
 	
-// Função para desenhar o placar
-function drawScore() {
-    ctx.font = '30px Arial';
+function drawArena() {
+    ctx.font = '60px Arial';
     ctx.fillStyle = '#fff';
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
 
-    ctx.fillText(player1Score, 50, 30);
-    ctx.fillText(player2Score, canvas.width - 50, 30);
+    ctx.fillText(player1Score, 250, 70);
+    ctx.fillText(player2Score, canvas.width - 250, 70);
+
+    ctx.moveTo(canvas.width/2, 0);
+    ctx.lineTo(canvas.width/2, canvas.height);
+    ctx.stroke();
 }
 
 // Função para atualizar a posição da bola
@@ -157,7 +220,7 @@ function resetBall() {
     ballY = canvas.height / 2;
 
     // Definindo a velocidade inicial da bola e direção inicial
-    ballSpeedX = (Math.random() * 2 - 1) * 6 + 2; // Velocidade horizontal entre 2 e 8 (para direita ou esquerda)
+    ballSpeedX = (Math.random() * 2 - 1) * 10 + 6; // Velocidade horizontal entre 6 e 12 (para direita ou esquerda)
     ballSpeedY = Math.random() * 2 - 1; // Velocidade vertical aleatória entre -1 e 1
 
     // Efeito visual para indicar a mudança de posse
